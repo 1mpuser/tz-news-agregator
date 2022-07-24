@@ -26,7 +26,7 @@ class NewsController{
         try {
             const {id} = req.params;
             const newsItem = await NewsItem.find();
-            const tmpId = +id - 1;
+            const tmpId = +id;
             console.log(tmpId)
             const item = newsItem[tmpId]
             return res.json(item);
@@ -37,7 +37,8 @@ class NewsController{
     }
     async create(req : MulterRequest, res : Response){
         try {
-            const {title, text} = req.body;
+            const { title, text, author, dateOfCreate } = req.body;
+            console.log(req.body)
             const {img} = req.files;
             //if (!isAuth) return res.json({message : "Not authorised user"})
             const fileName = uuid.v4() + '.jpg';
@@ -45,7 +46,9 @@ class NewsController{
             const newsItem = new NewsItem({
                 title,
                 text,
-                img : fileName
+                img: fileName,
+                author,
+                dateOfCreate
             });
             await newsItem.save()
             return res.json(newsItem)
@@ -58,14 +61,15 @@ class NewsController{
 
         try {
             const {id} = req.params;
-            const {title, text} = req.body;
+            const {title, text, author, dateOfCreate} = req.body;
             let img : any = undefined //srly any
             const file = req.files;
             if (file) img = file.img; //idk why not worked with destruction so i made this manually
             const newsItems = await NewsItem.find();
-            const tmpId = +id - 1;
+            const tmpId = +id;
             const neededItem = newsItems[tmpId];
-
+            if (dateOfCreate) await neededItem.updateOne({dateOfCreate})
+            if (author) await neededItem.updateOne({author})
             if (title) await neededItem.updateOne({title})
             if (text) await neededItem.updateOne({text})
             if (img) {
@@ -85,8 +89,10 @@ class NewsController{
         try {
             const {id} = req.params;
             const newsItems = await NewsItem.find();
-            const tmpId = +id - 1;
+            const tmpId = +id;
             const neededItem = newsItems[tmpId];
+            const tmpPath = path.resolve(__dirname, '..', 'static', neededItem.img);
+            fs.unlinkSync(tmpPath);
             await neededItem.delete();
             return res.json(neededItem);
         } catch (error) {

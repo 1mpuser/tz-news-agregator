@@ -55,5 +55,10 @@ class AuthController {
             res.status(400).json({message : "Get users error"})
         }
     }
+    async check(req : Request, res : Response) {
+        const { id } = req.body;
+        const token = generateAccessToken(id);
+        return res.json({token})
+    }
 }
 export default AuthController
